@@ -6,81 +6,63 @@ from safi.cmd  import *
 import datetime
 
 
+def save_request(args,end_point=None,success=None):
+    OBJETCTYPE=3
+    SERVICEID= 3
+    if success:
+        args['accepted_at']=datetime.datetime.now()
+    
+    args['date']=datetime.date.today()
+    args['object_type']=OBJETCTYPE
+    args['service_id']=SERVICEID
+    #args['end_point']=end_point
+    args['attempts']=1
+    
+
+
+    print(args)
+    args=Utils.to_json([args])
+    print(args[0])
+    r=Utils.post(args[0],end_point)
+    return r
+
+   
 
 
 def main():
+    LINEACREDITO=3
+    SERVICE_ID=3
     is_available=False
-    CONFIG_FILE='/opt/progressa/safi.cfg'
+    CONFIG_FILE='/opt/progressa/srv/approval-monitor/safi.cfg'
     start_job = datetime.datetime.now()
-    ws_config=Utils.load_settings(CONFIG_FILE,section='WEBSERVICES')
-    log_config=Utils.load_settings(CONFIG_FILE,section='LOG')
-    debug=False
-    if log_config['servicelogtrace']==1:
-        debug=True
+    service_settings=Utils.load_settings(CONFIG_FILE,section='SERVICE')
+    db_settings=Utils.load_settings(CONFIG_FILE,section='DATABASE')
+    db=Connector(**db_settings)
+    lineas_autorizadas=Request.Integracion(PGSS_LINEASCREDITO).add()
 
-    endpoint=ws_config.get('bodesasaldos')
-    settings=Utils.load_settings(CONFIG_FILE)        
-    logger=Utils.log_handler('/opt/progressa/actualizasaldos.log')
+    resultados=db.get(lineas_autorizadas)
+    json_request=resultados.to_json(key='idLineaCredito')
+    for json in json_request:
+        #print(json)
+       
+        json_string=json['string']
+        r=Utils.post(json_string,'http://10.90.0.71:28108/api/v1/ProductosProgressa/insert')
+  
+        linea_credito=json['key']
+        status_code=500
+        reason='Fail'
+        message='False'  
+        response={}
+        response['object_key']= int(linea_credito)
+        response['status_code']=r.status_code
+        response['reason']=r.reason
+        response['message']=r.text
+        response['original_request']=str(json_string)
+        response['end_point']='http://10.90.0.71:28108/api/v1/ProductosProgressa/insert'
+        print(response)
+        control_endpoint='http://10.90.100.70:3000/ctrl/v1.0/outgoing-request/'
+        sr=save_request(response,end_point=control_endpoint ,success=True)
 
-    try :
-        db=Connector(**settings)
-        is_available=db.is_available
-    except Exception:
-        logger.critical('La Base de datos no esta disponible.' , exc_info=debug)
-
-    if is_available :
-        logger.info('Conexión a la BD exitosa.')
-        #saldos_actualizados=Request.Integracion(PGSS_SALDOSDIARIOS).add(Tipo='I',Instrumento='C',OrigenID=111111130)
-        saldos_actualizados=Request.Integracion(PGSS_SALDOSDIARIOS).add(Tipo='I')
-        #saldos_actualizados=Request.Integracion(PGSS_SALDOSDIARIOS).add(Tipo='I',Instrumento='C',OrigenID=11130)
-
-        logger.info(saldos_actualizados.routine)
-        logger.info(saldos_actualizados.parameters)
-        try:
-         data=db.get(saldos_actualizados)
-        except Exception:
-         logger.critical('Error al ejecutar rutina ',exc_info=True)
-         print(data.data)
-        if(data.status_code==0):
-            logger.info(f'Información generada correctamente, registros  por procesar:{data.rowcount }')
-            if(data.rowcount>0):
-                json=data.to_json()
-                if not Utils.is_reachable(endpoint): 
-                    logger.info(f'El EndPoint esta disponible: { endpoint }')
-                    success=0
-                    error=0
-                    logger.info(f'Comienza consumo del EndPoint.')
-                    for resultados in json:
-                        try :
-                            r=Utils.post(resultados,end_point=endpoint)
-                            if(debug):
-                                logger.info(f'Petición exitosa, Endpoint Response: {r.status_code} -{r.reason}  -  elapsed at: { r.elapsed }')
-                            if(not r.ok):
-                                error=error+1
-                                logger.warning(f'Petición rechazada, Response: {r.status_code} -{r.reason}  -  elapsed at: { r.elapsed }')
-                                logger.warning(f'Respuesta: {r.text}')
-                                logger.warning('= payload =========>>\n' + resultados)
-                                logger.warning('<<===========payload=')
-                            else:
-                                success=success+1
-
-                            
-
-                        except Exception as e:
-                            logger.critical('Error al procesar la peticion POST.' , exc_info=True)
-                            logger.critical(e)
-
-                            return False
-                    end_job = datetime.datetime.now()
-                    elapsed_time=end_job-start_job
-                    logger.info('Procesados ' + str(data.rowcount) +' registros,   Exitosos:'  + str(success) + ', Fallidos:' + str(error)+ ', en ' +  str(elapsed_time.total_seconds())  + ' segundos.')
-                    return True
-                else:
-                    logger.critical('El endPoint no esta disponible.')
-                    return False
-            else:
-                logger.info('Terminado, No hay datos que procesar.')
-                return True
     return True
 #-------------------------------------------------------------------------
 #  RUN !

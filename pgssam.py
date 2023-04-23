@@ -18,7 +18,7 @@ from approval_monitor import main
 
 # log levels = CRITICAL = 50, ERROR = 40 , WARNING = 30 , INFO = 20 DEBUG = 10 NOTSET = 0
 ## SERVICE SETTINGS
-LOG_FILE_NAME='opt/progressa/logs/pgss-approval-mon.log'
+LOG_FILE_NAME='/opt/progressa/logs/approval-monitor-service.log'
 LOG_LEVEL=10
 LOG_LOGGER_NAME='pgss-approval-mon'
 LOG_OUTPUT_FORMAT='%(asctime)s.%(msecs)03d |[%(levelname)-8s] : %(message)s'
@@ -67,8 +67,8 @@ script_name = os.path.basename(__file__)
 # Get logger
 #logger = logging.getLogger("main")
 
-DEBUG_INTERVAL_TIME = 10
-PRODUCTION_INTERVAL_TIME = 30
+DEBUG_INTERVAL_TIME = 20
+PRODUCTION_INTERVAL_TIME = 20
 
 
 
@@ -125,7 +125,7 @@ while True:
     ###########################
     # Service loop            #
     ###########################
-    time.INTERVAL(1)
+    time.sleep(1)
 
     if USR1_KILL_SIGNAL_SET:
         # Reset  flag y continua a  main()

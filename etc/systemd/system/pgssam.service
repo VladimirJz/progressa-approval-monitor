@@ -25,7 +25,7 @@ Description= Progressa - Approval Monitor Service
 Type=simple
 
 # Proceso base
-ExecStart=/opt/progressa/.env/bin/python3 /opt/progressa/srv/approval_monitor_service.py
+ExecStart=/opt/progressa/srv/approval-monitor/dev/bin/python3 /opt/progressa/srv/approval-monitor/pgssam.py
 
 # Considerar la salida de python
 Environment="PYTHONUNBUFFERED=x"
