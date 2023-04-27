@@ -3,6 +3,7 @@ import sys,os
 from safi.core import Request,Connector
 from safi.extras import Utils
 from safi.cmd  import *
+from pathlib import Path
 import datetime
 import requests.exceptions
 
@@ -44,16 +45,19 @@ def main():
 
     
  
-    print (f'Registrando salida en :{DEFAULT_LOG_FILE}')
+    print (f'Salida por default :{DEFAULT_LOG_FILE}')
     try:
         settings=Utils.load_settings(CONFIG_FILE)
         log_settings=Utils.load_settings(CONFIG_FILE,section='LOG')
 
         log_file=log_settings.get('logfile',DEFAULT_LOG_FILE)
+        file = Path(log_file)
+        file.touch(exist_ok=True)
         log_level=log_settings.get('loglevel','INFO')
         logger=Utils.log_handler(log_file,level=log_level)        
     except Exception as e:
         print ('Error')
+        print(e)
         return False
 
     try:
@@ -75,7 +79,7 @@ def main():
     is_available=False
     start_job = datetime.datetime.now()
     debug=False
-    if log_settings['servicelogtrace']==1:
+    if log_settings['debugtrace']==1:
         debug=True
 
     try :
