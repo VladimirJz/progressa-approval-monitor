@@ -50,12 +50,12 @@ else:
 
 LOG_OUTPUT_FORMAT='%(asctime)s.%(msecs)03d |[%(levelname)-8s] : %(message)s'
 formatter=logging.Formatter(LOG_OUTPUT_FORMAT)
-file_handler = logging.FileHandler('/opt/progressa/logs/update-monitor-service.log')
+file_handler = logging.FileHandler('/opt/progressa/logs/approval-monitor-service.log')
 file_handler.setFormatter(formatter)
 
                                            
 # Get logger
-logger_service = logging.getLogger("pgssum")
+logger_service = logging.getLogger("pgssam")
 logger_service.addHandler(file_handler) 
 if not DEBUG:
     logger_service.setLevel(logging.INFO)

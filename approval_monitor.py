@@ -45,7 +45,7 @@ def main():
 
     
  
-    print (f'Salida por default :{DEFAULT_LOG_FILE}')
+    #print (f'Salida por default :{DEFAULT_LOG_FILE}')
     try:
         settings=Utils.load_settings(CONFIG_FILE)
         log_settings=Utils.load_settings(CONFIG_FILE,section='LOG')
