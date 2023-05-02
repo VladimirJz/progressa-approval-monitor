@@ -14,7 +14,8 @@ def save_request(args,end_point=None,success=None):
     SERVICEID= 3
     if success:
         args['accepted_at']=datetime.datetime.now()
-    
+    else:
+        args['accepted_at']=datetime.datetime.now()
     args['date']=datetime.date.today()
     args['object_type']=OBJETCTYPE
     args['service_id']=SERVICEID
@@ -24,7 +25,15 @@ def save_request(args,end_point=None,success=None):
 
 
     args=Utils.to_json([args])
-    r=Utils.post(args[0],end_point)
+    print("ARGS . .. . . . ...\n")
+    print(args[0])
+    try:
+        r=Utils.post(args[0],end_point)
+    except Exception as e:
+        print (e)
+
+
+
     return r
 
 
@@ -54,6 +63,7 @@ def main():
         file = Path(log_file)
         file.touch(exist_ok=True)
         log_level=log_settings.get('loglevel','INFO')
+        print(log_level)
         logger=Utils.log_handler(log_file,level=log_level)        
     except Exception as e:
         print ('Error')
@@ -131,6 +141,9 @@ def main():
                             response['status_code']=r.status_code
                             response['reason']=r.reason
                             response['message']=r.text
+                            if r.text=='':
+                                response['message']='No hubo mensaje de Respuesta:' + r.reason
+                                
                             if(not r.ok):
                                 error=error+1
                                 logger.error(f'Petición rechazada, Response: {r.status_code} -{r.reason}  -  elapsed at: { r.elapsed }')
@@ -153,14 +166,15 @@ def main():
                             response['message']=e
 
                             
-                        else:
+                        
                                        
-                            response['object_key']= int(LineaCreditoID)
-                            response['original_request']=json_string
-                            response['end_point']=endpoint
+                        response['object_key']= int(LineaCreditoID)
+                        response['original_request']=json_string
+                        response['end_point']=endpoint
 
-                            response_list.append(response)
-                            #print(response_list)
+                        response_list.append(response)
+                    
+                        print(response_list)
 
 
 
